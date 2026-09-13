@@ -1,0 +1,55 @@
+registry: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com
+imageTag: latest
+imagePullPolicy: IfNotPresent
+
+replicaCount: 2
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Secrets are NOT stored here. Create before installing the chart, e.g.:
+#   kubectl create secret generic streaming-app-secrets \
+#     --from-literal=JWT_SECRET='<long-random-string>' \
+#     --from-literal=AWS_ACCESS_KEY_ID='...' \
+#     --from-literal=AWS_SECRET_ACCESS_KEY='...'
+secretName: streaming-app-secrets
+
+mongo:
+  uri: mongodb://mongo:27017/streamingapp
+
+clientUrls: https://streamingapp.example.com
+
+services:
+  auth:
+    image: ecom-streamingapp-auth
+    port: 3001
+    healthPath: /health
+  streaming:
+    image: ecom-streamingapp-streaming
+    port: 3002
+    healthPath: /api/health
+  admin:
+    image: ecom-streamingapp-admin
+    port: 3003
+    healthPath: /api/health
+  chat:
+    image: ecom-streamingapp-chat
+    port: 3004
+    healthPath: /api/health
+
+frontend:
+  image: ecom-streamingapp-frontend
+  port: 80
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  host: streamingapp.example.com
