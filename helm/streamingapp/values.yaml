@@ -1,0 +1,76 @@
+# Registry prefix the images were pushed to.
+#   Docker Hub : your Docker Hub username            (e.g. mcapsingh)
+#   Amazon ECR : <acct>.dkr.ecr.<region>.amazonaws.com
+# Images are resolved as <imagePrefix>/<service image>:<tag>
+imagePrefix: YOUR_DOCKERHUB_USER
+imagePullPolicy: IfNotPresent
+
+services:
+  auth:
+    image: streaming-auth
+    tag: "1.0.0"
+    replicas: 2
+    port: 3001
+    healthPath: /health
+  streaming:
+    image: streaming-stream
+    tag: "1.0.0"
+    replicas: 2
+    port: 3002
+    healthPath: /api/health
+  admin:
+    image: streaming-admin
+    tag: "1.0.0"
+    replicas: 2
+    port: 3003
+    healthPath: /api/health
+  chat:
+    image: streaming-chat
+    tag: "1.0.0"
+    replicas: 2
+    port: 3004
+    healthPath: /api/health
+  frontend:
+    image: streaming-frontend
+    tag: "1.0.0"
+    replicas: 2
+    port: 80
+    healthPath: /
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Non-secret settings -> ConfigMap `streamingapp-config`
+config:
+  mongoDb: streamingapp
+  clientUrls: http://streamingapp.local
+  streamingPublicUrl: http://streamingapp.local
+  awsRegion: ap-south-1
+  awsS3Bucket: ""
+  awsCdnUrl: ""
+
+# Sensitive settings -> Secret `streamingapp-secret`.
+# Override at install time, never commit real values:
+#   --set secrets.jwtSecret=... --set secrets.awsAccessKeyId=... --set secrets.awsSecretAccessKey=...
+secrets:
+  jwtSecret: changeme
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+
+mongo:
+  image: mongo:6
+  storageSize: 5Gi
+  storageClass: ""
+
+ingress:
+  enabled: true
+  className: nginx
+  host: streamingapp.local
+  tls:
+    enabled: false
+    secretName: streamingapp-tls

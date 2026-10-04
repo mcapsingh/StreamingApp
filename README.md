@@ -117,6 +117,34 @@ cd backend/chatService && npm run dev
 cd frontend && npm start
 ```
 
+## Kubernetes, Helm, Jenkins and AWS EKS
+
+The platform is packaged as a Helm chart (`helm/streamingapp`) and deployed to Kubernetes behind one Ingress host.
+
+| Path | Service |
+| --- | --- |
+| `/` | frontend-svc :80 |
+| `/api/auth` | auth-svc :3001 (rewritten to `/api/*`) |
+| `/api/streaming` | streaming-svc :3002 |
+| `/api/admin` | admin-svc :3003 |
+| `/api/chat`, `/socket.io` | chat-svc :3004 |
+
+Quick install (images already pushed to Docker Hub or ECR):
+
+```bash
+helm install streamingapp ./helm/streamingapp \
+  --set imagePrefix=<dockerhub-user-or-ecr-registry> \
+  --set secrets.jwtSecret=<random-string>
+kubectl rollout status deploy/auth deploy/streaming deploy/admin deploy/chat deploy/frontend
+echo "127.0.0.1 streamingapp.local" | sudo tee -a /etc/hosts   # local clusters; on EKS use the load balancer hostname
+./scripts/smoke-test.sh http://streamingapp.local
+```
+
+- Architecture diagrams: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Full step-by-step guide (Docker, ECR, EKS, Jenkins, CloudWatch, scaling, ChatOps): [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- CI pipeline: [Jenkinsfile](Jenkinsfile) - builds 5 images, pushes to ECR, `helm upgrade --install` on EKS
+- Scripts: `scripts/` (build/push, ECR repos, CloudWatch alarms, smoke test); EKS cluster definition: `eks/cluster.yaml`
+
 ## Feature Highlights
 
 - **S3-backed adaptive streaming** with secure signed uploads for admins.

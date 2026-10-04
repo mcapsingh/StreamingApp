@@ -1,0 +1,1 @@
+{{- include "streamingapp.service" (dict "name" "chat" "svc" .Values.services.chat) }}

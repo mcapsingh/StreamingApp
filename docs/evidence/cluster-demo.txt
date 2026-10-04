@@ -1,0 +1,58 @@
+### kubectl scale deploy/streaming --replicas=4
+deployment.apps/streaming scaled
+Waiting for deployment "streaming" rollout to finish: 2 of 4 updated replicas are available...
+Waiting for deployment "streaming" rollout to finish: 3 of 4 updated replicas are available...
+deployment "streaming" successfully rolled out
+streaming-5f495b66c5-hrm27 1/1 Running
+streaming-5f495b66c5-qwb99 1/1 Running
+streaming-5f495b66c5-s2px4 1/1 Running
+streaming-5f495b66c5-s9qc8 1/1 Running
+
+### rolling update: helm upgrade --set services.auth.tag=1.0.1 (zero downtime check)
+STATUS: deployed
+REVISION: 3
+Waiting for deployment "auth" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "auth" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "auth" rollout to finish: 2 old replicas are pending termination...
+Waiting for deployment "auth" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "auth" rollout to finish: 1 old replicas are pending termination...
+deployment "auth" successfully rolled out
+HTTP codes during rollout (40 requests/1s apart): 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 401 
+image: local/streaming-auth:1.0.1
+
+### self-heal: delete a chat pod
+pod "chat-6ffb84d99c-wnvrr" deleted from default namespace
+Waiting for deployment "chat" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "chat" rollout to finish: 1 of 2 updated replicas are available...
+deployment "chat" successfully rolled out
+chat-6ffb84d99c-k7dg5 1/1 Running
+chat-6ffb84d99c-qv5xv 1/1 Running
+
+### final: kubectl get pods,svc,ingress
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/admin-7957dd9b59-9k8h4       1/1     Running   0          2m34s
+pod/admin-7957dd9b59-qbnld       1/1     Running   0          3m5s
+pod/auth-7884fd8c4c-8bv95        1/1     Running   0          65s
+pod/auth-7884fd8c4c-htm8f        1/1     Running   0          44s
+pod/chat-6ffb84d99c-k7dg5        1/1     Running   0          22s
+pod/chat-6ffb84d99c-qv5xv        1/1     Running   0          22s
+pod/frontend-7544fcdb99-59fxd    1/1     Running   0          7m30s
+pod/frontend-7544fcdb99-662s2    1/1     Running   0          7m30s
+pod/mongo-0                      1/1     Running   0          7m30s
+pod/streaming-5f495b66c5-hrm27   1/1     Running   0          2m42s
+pod/streaming-5f495b66c5-qwb99   1/1     Running   0          103s
+pod/streaming-5f495b66c5-s2px4   1/1     Running   0          103s
+pod/streaming-5f495b66c5-s9qc8   1/1     Running   0          3m4s
+
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)     AGE
+service/admin-svc       ClusterIP   10.96.44.255    <none>        3003/TCP    7m30s
+service/auth-svc        ClusterIP   10.96.27.155    <none>        3001/TCP    7m30s
+service/chat-svc        ClusterIP   10.96.135.216   <none>        3004/TCP    7m30s
+service/frontend-svc    ClusterIP   10.96.198.36    <none>        80/TCP      7m30s
+service/kubernetes      ClusterIP   10.96.0.1       <none>        443/TCP     26m
+service/mongo           ClusterIP   None            <none>        27017/TCP   7m30s
+service/streaming-svc   ClusterIP   10.96.191.217   <none>        3002/TCP    7m30s
+
+NAME                                          CLASS   HOSTS                ADDRESS     PORTS   AGE
+ingress.networking.k8s.io/streamingapp        nginx   streamingapp.local   localhost   80      7m30s
+ingress.networking.k8s.io/streamingapp-auth   nginx   streamingapp.local   localhost   80      7m30s

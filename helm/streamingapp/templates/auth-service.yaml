@@ -1,0 +1,1 @@
+{{- include "streamingapp.service" (dict "name" "auth" "svc" .Values.services.auth) }}

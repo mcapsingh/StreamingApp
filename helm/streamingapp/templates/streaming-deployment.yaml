@@ -1,0 +1,1 @@
+{{- include "streamingapp.deployment" (dict "root" . "name" "streaming" "svc" .Values.services.streaming "backend" true) }}
